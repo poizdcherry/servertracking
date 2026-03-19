@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticate } from "../route";
+import { authenticate } from "@/lib/auth";
 import { calibrate } from "@/lib/store";
 
 export async function POST(request: NextRequest) {

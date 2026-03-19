@@ -1,32 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
+import { authenticate } from "@/lib/auth";
 import { matchZone } from "@/lib/store";
 import { updateDevice } from "@/lib/devices";
 
-const API_KEY = process.env.API_KEY;
-
-function unauthorized() {
-  return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-}
-
-export function authenticate(request: NextRequest): boolean {
-  if (!API_KEY) return false;
-  const auth = request.headers.get("authorization") ?? "";
-  if (!auth.startsWith("Bearer ")) return false;
-  const token = auth.slice(7);
-  const tokenBuf = Buffer.from(token);
-  const keyBuf = Buffer.from(API_KEY);
-  if (tokenBuf.length !== keyBuf.length) return false;
-  return timingSafeEqual(tokenBuf, keyBuf);
-}
-
 export async function POST(request: NextRequest) {
-  if (!API_KEY) {
-    console.error("API_KEY environment variable is not set");
-    return NextResponse.json({ error: "server misconfigured" }, { status: 500 });
+  if (!authenticate(request)) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-
-  if (!authenticate(request)) return unauthorized();
 
   const data = await request.json().catch(() => null);
   if (!data) {
